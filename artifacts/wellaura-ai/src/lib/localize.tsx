@@ -306,8 +306,6 @@ const copy: Record<string, [string, string]> = {
   'Remove this medicine from reminders?': ['ఈ మందును రిమైండర్ల నుంచి తొలగించాలా?', 'इस दवा को रिमाइंडर से हटाएँ?'],
   'Delete this profile and its wellness records?': ['ఈ ప్రొఫైల్, దాని ఆరోగ్య రికార్డులను తొలగించాలా?', 'यह प्रोफ़ाइल और इसके स्वास्थ्य रिकॉर्ड हटाएँ?'],
   'Permanently delete all of your wellness data? This cannot be undone.': ['మీ ఆరోగ్య డేటా మొత్తాన్ని శాశ్వతంగా తొలగించాలా? దీన్ని తిరిగి పొందలేరు.', 'अपना पूरा स्वास्थ्य डेटा स्थायी रूप से हटाएँ? इसे वापस नहीं किया जा सकता।'],
-  'Delete this saved report note?': ['ఈ సేవ్ చేసిన నివేదిక గమనికను తొలగించాలా?', 'यह सहेजा गया रिपोर्ट नोट हटाएँ?'],
-  'Delete this cycle note?': ['ఈ సైకిల్ గమనికను తొలగించాలా?', 'यह चक्र नोट हटाएँ?'],
   'Medicine notifications are available only while this app is open.': ['యాప్ తెరిచి ఉన్నప్పుడే మందుల నోటిఫికేషన్‌లు అందుబాటులో ఉంటాయి.', 'दवा नोटिफ़िकेशन केवल ऐप खुला रहने पर उपलब्ध हैं।'],
   'Hydration notifications are available only while this app is open.': ['యాప్ తెరిచి ఉన్నప్పుడే నీటి నోటిఫికేషన్‌లు అందుబాటులో ఉంటాయి.', 'पानी के नोटिफ़िकेशन केवल ऐप खुला रहने पर उपलब्ध हैं।'],
   'Enable optional browser notifications': ['ఐచ్ఛిక బ్రౌజర్ నోటిఫికేషన్‌లను ప్రారంభించండి', 'वैकल्पिक ब्राउज़र नोटिफ़िकेशन चालू करें'],
