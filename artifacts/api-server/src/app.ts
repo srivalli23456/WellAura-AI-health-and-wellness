@@ -1,8 +1,14 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import { clerkMiddleware } from "@clerk/express";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import {
+  CLERK_PROXY_PATH,
+  clerkProxyMiddleware,
+  getClerkProxyHost,
+} from "./middlewares/clerkProxyMiddleware";
 
 const app: Express = express();
 
@@ -25,9 +31,24 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  "/api",
+  clerkMiddleware((req) => {
+    const host = getClerkProxyHost(req);
+    if (!host) {
+      return {};
+    }
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    return {
+      proxyUrl: `${protocol}://${host}${CLERK_PROXY_PATH}`,
+    };
+  }),
+);
 
 app.use("/api", router);
 

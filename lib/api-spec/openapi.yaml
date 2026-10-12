@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Private, consent-based wellness records and education for WellAura AI
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: wellness
+    description: Authenticated, user-owned wellness operations
 paths:
   /healthz:
     get:
@@ -24,7 +26,417 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /wellness/consent:
+    get:
+      operationId: getWellnessConsent
+      tags: [wellness]
+      summary: Get the signed-in user's privacy choices
+      responses:
+        "200":
+          description: Current consent preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consent"
+    put:
+      operationId: updateWellnessConsent
+      tags: [wellness]
+      summary: Save privacy and optional data-use choices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentInput"
+      responses:
+        "200":
+          description: Saved consent preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consent"
+  /wellness/dashboard:
+    get:
+      operationId: getWellnessDashboard
+      tags: [wellness]
+      summary: Get a private wellness overview for one authorized profile
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Overview and safe upcoming reminders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /wellness/profiles:
+    get:
+      operationId: listWellnessProfiles
+      tags: [wellness]
+      summary: List the signed-in user's own and consented caregiver profiles
+      responses:
+        "200":
+          description: Profiles owned by this account
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WellnessProfile"
+    post:
+      operationId: createWellnessProfile
+      tags: [wellness]
+      summary: Create a profile after confirming permission from the person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "201":
+          description: New private profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessProfile"
+  /wellness/profiles/{id}:
+    patch:
+      operationId: updateWellnessProfile
+      tags: [wellness]
+      summary: Update a profile owned by the signed-in user
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated private profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessProfile"
+    delete:
+      operationId: deleteWellnessProfile
+      tags: [wellness]
+      summary: Delete a caregiver profile and its wellness records
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Profile and related wellness records deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /wellness/medicines:
+    get:
+      operationId: listMedicines
+      tags: [wellness]
+      summary: List medicine schedules for one authorized profile
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Medicine schedules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medicine"
+    post:
+      operationId: createMedicine
+      tags: [wellness]
+      summary: Save a medicine exactly as prescribed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicineInput"
+      responses:
+        "201":
+          description: Saved medicine schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicine"
+  /wellness/medicines/{id}:
+    patch:
+      operationId: updateMedicine
+      tags: [wellness]
+      summary: Update reminder details without recommending or changing a prescribed dose
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicineUpdate"
+      responses:
+        "200":
+          description: Updated schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicine"
+    delete:
+      operationId: deleteMedicine
+      tags: [wellness]
+      summary: Remove a medicine reminder
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Reminder removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /wellness/medicines/{id}/taken:
+    post:
+      operationId: logMedicineTaken
+      tags: [wellness]
+      summary: Record that a scheduled dose was taken
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoseLogInput"
+      responses:
+        "201":
+          description: Dose tracking event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoseLog"
+  /wellness/reports:
+    get:
+      operationId: listHealthReports
+      tags: [wellness]
+      summary: List saved report notes for one authorized profile
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Private health report notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HealthReport"
+    post:
+      operationId: createHealthReport
+      tags: [wellness]
+      summary: Save a report value for educational explanation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HealthReportInput"
+      responses:
+        "201":
+          description: Saved report note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
+  /wellness/reports/{id}:
+    delete:
+      operationId: deleteHealthReport
+      tags: [wellness]
+      summary: Delete a private report note
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Report note deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /wellness/cycles:
+    get:
+      operationId: listCycleRecords
+      tags: [wellness]
+      summary: List menstrual records for one authorized profile
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Private menstrual records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CycleRecord"
+    post:
+      operationId: createCycleRecord
+      tags: [wellness]
+      summary: Record a period start date and optional cycle estimate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CycleRecordInput"
+      responses:
+        "201":
+          description: Saved menstrual record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CycleRecord"
+  /wellness/cycles/{id}:
+    delete:
+      operationId: deleteCycleRecord
+      tags: [wellness]
+      summary: Delete a menstrual record
+      parameters:
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: Menstrual record deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /wellness/lifestyle:
+    get:
+      operationId: getLifestyleLog
+      tags: [wellness]
+      summary: Get a private hydration, sleep, and activity log
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily wellness log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifestyleLog"
+    post:
+      operationId: saveLifestyleLog
+      tags: [wellness]
+      summary: Save today's hydration, sleep, and suitable activity tracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LifestyleLogInput"
+      responses:
+        "200":
+          description: Saved daily wellness log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LifestyleLog"
+  /wellness/assistant/messages:
+    post:
+      operationId: sendWellnessMessage
+      tags: [wellness]
+      summary: Request non-diagnostic health education
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistantMessageInput"
+      responses:
+        "200":
+          description: Educational reply and safety guidance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistantReply"
+  /wellness/privacy/data:
+    delete:
+      operationId: deleteWellnessData
+      tags: [wellness]
+      summary: Permanently delete the signed-in user's wellness data
+      responses:
+        "200":
+          description: Wellness data removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /wellness/plan:
+    get:
+      operationId: getWellnessPlan
+      tags: [wellness]
+      summary: Get the plan selected for this account
+      responses:
+        "200":
+          description: Current plan state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanState"
+    put:
+      operationId: selectWellnessPlan
+      tags: [wellness]
+      summary: Select a plan preview without initiating a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanInput"
+      responses:
+        "200":
+          description: Updated preview plan state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanState"
 components:
+  parameters:
+    RecordId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +445,394 @@ components:
           type: string
       required:
         - status
+    Consent:
+      type: object
+      properties:
+        healthDataConsent:
+          type: boolean
+        optionalPersonalizationConsent:
+          type: boolean
+        voiceProcessingConsent:
+          type: boolean
+        language:
+          type: string
+          enum: [en, te, hi]
+        savedAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [healthDataConsent, optionalPersonalizationConsent, voiceProcessingConsent, language, savedAt]
+    ConsentInput:
+      type: object
+      properties:
+        healthDataConsent:
+          type: boolean
+        optionalPersonalizationConsent:
+          type: boolean
+        voiceProcessingConsent:
+          type: boolean
+        language:
+          type: string
+          enum: [en, te, hi]
+      required: [healthDataConsent, optionalPersonalizationConsent, voiceProcessingConsent, language]
+    WellnessProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        relationship:
+          type: string
+        consentConfirmed:
+          type: boolean
+        isSelf:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, displayName, relationship, consentConfirmed, isSelf, createdAt]
+    ProfileInput:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        relationship:
+          type: string
+          minLength: 1
+          maxLength: 40
+        consentConfirmed:
+          type: boolean
+      required: [displayName, relationship, consentConfirmed]
+    ProfileUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        consentConfirmed:
+          type: boolean
+    DashboardSummary:
+      type: object
+      properties:
+        profileId:
+          type: string
+        profileName:
+          type: string
+        activeMedicineCount:
+          type: integer
+        nextDose:
+          type: ["string", "null"]
+        nextDoseMedicine:
+          type: ["string", "null"]
+        reportsCount:
+          type: integer
+        cyclesCount:
+          type: integer
+        waterMlToday:
+          type: integer
+        sleepHoursLastLogged:
+          type: ["number", "null"]
+        activityMinutesToday:
+          type: integer
+        upcomingDoses:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingDose"
+      required: [profileId, profileName, activeMedicineCount, nextDose, nextDoseMedicine, reportsCount, cyclesCount, waterMlToday, sleepHoursLastLogged, activityMinutesToday, upcomingDoses]
+    UpcomingDose:
+      type: object
+      properties:
+        medicineId:
+          type: string
+        medicineName:
+          type: string
+        prescribedDose:
+          type: string
+        scheduledTime:
+          type: string
+        taken:
+          type: boolean
+      required: [medicineId, medicineName, prescribedDose, scheduledTime, taken]
+    Medicine:
+      type: object
+      properties:
+        id:
+          type: string
+        profileId:
+          type: string
+        name:
+          type: string
+        prescribedDose:
+          type: string
+        doseTimes:
+          type: array
+          items:
+            type: string
+        startDate:
+          type: ["string", "null"]
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, profileId, name, prescribedDose, doseTimes, startDate, endDate, notes, active, createdAt]
+    MedicineInput:
+      type: object
+      properties:
+        profileId:
+          type: string
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        prescribedDose:
+          type: string
+          minLength: 1
+          maxLength: 80
+        doseTimes:
+          type: array
+          items:
+            type: string
+            pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        startDate:
+          type: ["string", "null"]
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+      required: [profileId, name, prescribedDose, doseTimes, startDate, endDate, notes, active]
+    MedicineUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        doseTimes:
+          type: array
+          items:
+            type: string
+            pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        startDate:
+          type: ["string", "null"]
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+      required: [name, doseTimes, startDate, endDate, notes, active]
+    DoseLogInput:
+      type: object
+      properties:
+        scheduledTime:
+          type: string
+        takenAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [taken, skipped]
+      required: [scheduledTime, takenAt, status]
+    DoseLog:
+      type: object
+      properties:
+        id:
+          type: string
+        medicineId:
+          type: string
+        scheduledTime:
+          type: string
+        takenAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [taken, skipped]
+      required: [id, medicineId, scheduledTime, takenAt, status]
+    HealthReport:
+      type: object
+      properties:
+        id:
+          type: string
+        profileId:
+          type: string
+        testName:
+          type: string
+        resultValue:
+          type: string
+        unit:
+          type: ["string", "null"]
+        referenceRange:
+          type: ["string", "null"]
+        plainLanguageNote:
+          type: ["string", "null"]
+        reportDate:
+          type: ["string", "null"]
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, profileId, testName, resultValue, unit, referenceRange, plainLanguageNote, reportDate, createdAt]
+    HealthReportInput:
+      type: object
+      properties:
+        profileId:
+          type: string
+        testName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        resultValue:
+          type: string
+          minLength: 1
+          maxLength: 80
+        unit:
+          type: ["string", "null"]
+        referenceRange:
+          type: ["string", "null"]
+        plainLanguageNote:
+          type: ["string", "null"]
+        reportDate:
+          type: ["string", "null"]
+          format: date
+      required: [profileId, testName, resultValue, unit, referenceRange, plainLanguageNote, reportDate]
+    CycleRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        profileId:
+          type: string
+        cycleStartDate:
+          type: string
+          format: date
+        estimatedCycleDays:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, profileId, cycleStartDate, estimatedCycleDays, notes, createdAt]
+    CycleRecordInput:
+      type: object
+      properties:
+        profileId:
+          type: string
+        cycleStartDate:
+          type: string
+          format: date
+        estimatedCycleDays:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 90
+        notes:
+          type: ["string", "null"]
+      required: [profileId, cycleStartDate, estimatedCycleDays, notes]
+    LifestyleLog:
+      type: object
+      properties:
+        id:
+          type: string
+        profileId:
+          type: string
+        date:
+          type: string
+          format: date
+        waterMl:
+          type: integer
+        sleepHours:
+          type: ["number", "null"]
+        activityMinutes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, profileId, date, waterMl, sleepHours, activityMinutes, createdAt]
+    LifestyleLogInput:
+      type: object
+      properties:
+        profileId:
+          type: string
+        date:
+          type: string
+          format: date
+        waterMl:
+          type: integer
+          minimum: 0
+          maximum: 15000
+        sleepHours:
+          type: ["number", "null"]
+          minimum: 0
+          maximum: 24
+        activityMinutes:
+          type: integer
+          minimum: 0
+          maximum: 1440
+      required: [profileId, date, waterMl, sleepHours, activityMinutes]
+    AssistantMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        language:
+          type: string
+          enum: [en, te, hi]
+      required: [message, language]
+    AssistantReply:
+      type: object
+      properties:
+        answer:
+          type: string
+        safetyNote:
+          type: string
+        urgent:
+          type: boolean
+        sourceType:
+          type: string
+          enum: [educational, urgent]
+      required: [answer, safetyNote, urgent, sourceType]
+    PlanState:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [free, plus]
+        previewOnly:
+          type: boolean
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [plan, previewOnly, updatedAt]
+    PlanInput:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [free, plus]
+      required: [plan]
+    DeleteResult:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+      required: [deleted]
 
