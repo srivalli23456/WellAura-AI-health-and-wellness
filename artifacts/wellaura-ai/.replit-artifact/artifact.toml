@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "WellAura AI"
+description = "An accessible health and wellness companion with secure individual accounts, consent-based caregiver profiles, medication reminders, plain-language health education, nutrition and lifestyle guidance, women's health learning, multilingual support, and a privacy-first conversational assistant."
+version = "1.0.0"
+id = "artifacts/wellaura-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22437
+
+[services.development]
+run = "pnpm --filter @workspace/wellaura-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wellaura-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/wellaura-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22437"
+BASE_PATH = "/"
